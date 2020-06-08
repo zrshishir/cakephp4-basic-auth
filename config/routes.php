@@ -47,15 +47,15 @@ $routes->setRouteClass(DashedRoute::class);
 
 $routes->scope('/', function (RouteBuilder $builder) {
     // Register scoped middleware for in scopes.
-    $builder->registerMiddleware('csrf', new CsrfProtectionMiddleware([
-        'httpOnly' => true,
-    ]));
+    // $builder->registerMiddleware('csrf', new CsrfProtectionMiddleware([
+    //     'httpOnly' => true,
+    // ]));
 
     /*
      * Apply a middleware to the current route scope.
      * Requires middleware to be registered through `Application::routes()` with `registerMiddleware()`
      */
-    $builder->applyMiddleware('csrf');
+    // $builder->applyMiddleware('csrf');
 
     /*
      * Here, we are connecting '/' (base path) to a controller called 'Pages',
@@ -84,6 +84,7 @@ $routes->scope('/', function (RouteBuilder $builder) {
      */
     $builder->setExtensions(['json']);
     $builder->resources('Users');
+    $builder->connect('/users/login', ['controller' => 'Users', 'action' => 'login']);
     
     $builder->fallbacks();
 });

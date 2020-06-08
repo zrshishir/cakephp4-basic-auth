@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Component\RequestHandlerComponent;
+use Cake\ORM\TableRegistry;
 
 /**
  * Users Controller
@@ -25,14 +26,14 @@ class UsersController extends AppController
         parent::beforeFilter($event);
         // Configure the login action to not require authentication, preventing
         // the infinite redirect loop issue
-        $this->Authentication->addUnauthenticatedActions(['login', 'add']);
+        $this->Authentication->addUnauthenticatedActions(['login', 'add', 'index', 'edit', 'view', 'delete']);
     }
 
     public function login()
     {
+        $res = array();
         $this->request->allowMethod(['get', 'post']);
         $result = $this->Authentication->getResult();
-    
         // regardless of POST or GET, redirect if user is logged in
         if ($result->isValid()) {
             // redirect to /articles after login success
@@ -40,13 +41,18 @@ class UsersController extends AppController
                 'controller' => 'Users',
                 'action' => 'index',
             ]);
-
-            return $this->redirect($redirect);
+                $res['status'] = 0;
+                $res['message'] = 'You are logged in.';
+            // return $this->redirect($redirect);
         }
         // display error if user submitted and authentication failed
         if ($this->request->is('post') && !$result->isValid()) {
+            $res['status'] = 0;
+            $res['message'] = 'Invalid username or password.';
             $this->Flash->error(__('Invalid username or password'));
         }
+        $this->set(compact('res'));
+        $this->set('_serialize', ['res']);
     }
 
     // in src/Controller/UsersController.php
@@ -104,12 +110,12 @@ class UsersController extends AppController
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('The user has been saved.'));
 
-                return $this->redirect(['action' => 'index']);
+                // return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The user could not be saved. Please, try again.'));
         }
         $this->set(compact('user'));
-        $this->set('_serialize', ['user']);
+        $this->set('_serialize', ['user', 'saved']);
 
     }
 
@@ -125,17 +131,19 @@ class UsersController extends AppController
         $user = $this->Users->get($id, [
             'contain' => [],
         ]);
+        $res = array();
         if ($this->request->is(['patch', 'post', 'put'])) {
             $user = $this->Users->patchEntity($user, $this->request->getData());
             if ($this->Users->save($user)) {
-                $this->Flash->success(__('The user has been saved.'));
-
-                return $this->redirect(['action' => 'index']);
+                $res['status'] = 1;
+				$res['msg'] = 'User updated successfully';
+            }else{
+                $res['status'] = 0;
+                $res['msg'] = 'The user could not be saved. Please, try again.';
             }
-            $this->Flash->error(__('The user could not be saved. Please, try again.'));
         }
-        $this->set(compact('user'));
-        $this->set('_serialize', ['user']);
+        $this->set(compact('res'));
+        $this->set('_serialize', ['res']);
 
     }
 
@@ -148,14 +156,18 @@ class UsersController extends AppController
      */
     public function delete($id = null)
     {
+        $res = array();
         $this->request->allowMethod(['post', 'delete']);
         $user = $this->Users->get($id);
         if ($this->Users->delete($user)) {
-            $this->Flash->success(__('The user has been deleted.'));
+            $res['status'] = 1;
+            $res['msg'] = 'The user has been deleted.';
         } else {
-            $this->Flash->error(__('The user could not be deleted. Please, try again.'));
+            $res['status'] = 0;
+            $res['msg'] = 'The user could not be deleted. Please, try again.';
         }
 
-        return $this->redirect(['action' => 'index']);
+        $this->set(compact('res'));
+        $this->set('_serialize', ['res']);
     }
 }
