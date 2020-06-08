@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use Cake\Controller\Component\RequestHandlerComponent;
 use Cake\ORM\TableRegistry;
+use Cake\Auth;
 
 /**
  * Users Controller
@@ -36,20 +37,12 @@ class UsersController extends AppController
         $result = $this->Authentication->getResult();
         // regardless of POST or GET, redirect if user is logged in
         if ($result->isValid()) {
-            // redirect to /articles after login success
-            $redirect = $this->request->getQuery('redirect', [
-                'controller' => 'Users',
-                'action' => 'index',
-            ]);
                 $res['status'] = 0;
                 $res['message'] = 'You are logged in.';
-            // return $this->redirect($redirect);
         }
-        // display error if user submitted and authentication failed
         if ($this->request->is('post') && !$result->isValid()) {
             $res['status'] = 0;
             $res['message'] = 'Invalid username or password.';
-            $this->Flash->error(__('Invalid username or password'));
         }
         $this->set(compact('res'));
         $this->set('_serialize', ['res']);
@@ -65,6 +58,8 @@ class UsersController extends AppController
             return $this->redirect(['controller' => 'Users', 'action' => 'login']);
         }
     }
+
+    
 
     /**
      * Index method
@@ -102,20 +97,25 @@ class UsersController extends AppController
      * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
      */
     public function add()
-    {
+    {   
+        $res = array();
         $this->request->allowMethod(['get', 'post']);
         $user = $this->Users->newEmptyEntity();
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->getData());
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('The user has been saved.'));
-
+                $res['status'] = 1;
+				$res['msg'] = 'User data saved successfully';
                 // return $this->redirect(['action' => 'index']);
+            }else{
+                $res['status'] = 0;
+                $res['msg'] = 'The user could not be saved. Please, try again.';
             }
-            $this->Flash->error(__('The user could not be saved. Please, try again.'));
+            // $this->Flash->error(__('The user could not be saved. Please, try again.'));
         }
-        $this->set(compact('user'));
-        $this->set('_serialize', ['user', 'saved']);
+        $this->set(compact('res'));
+        $this->set('_serialize', ['res']);
 
     }
 
